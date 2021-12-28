@@ -1,5 +1,7 @@
 #include "HVGE/Window.h"
 
+#include <assert.h>
+
 namespace HVGE
 {
     Window::Window(int width, int height, std::string title)
@@ -17,5 +19,10 @@ namespace HVGE
     {
         glfwDestroyWindow(m_Window);
         glfwTerminate();
+    }
+
+    void Window::CreateWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
+    {
+        assert(glfwCreateWindowSurface(instance, m_Window, nullptr, surface) == VK_SUCCESS);
     }
 }
