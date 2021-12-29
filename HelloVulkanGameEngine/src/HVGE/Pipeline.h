@@ -15,7 +15,6 @@ namespace HVGE
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;
         VkPipelineMultisampleStateCreateInfo multisampleInfo;
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
-        VkPipelineColorBlendStateCreateInfo colorBlendInfo;
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
         VkPipelineLayout pipelineLayout = nullptr;
         VkRenderPass renderPass = nullptr;
@@ -31,6 +30,7 @@ namespace HVGE
         Pipeline(const Pipeline&) = delete;
         void operator=(const Pipeline&) = delete;
 
+        void Bind(VkCommandBuffer commandBuffer);
         static PipelineConfigInfo DefaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
     private:

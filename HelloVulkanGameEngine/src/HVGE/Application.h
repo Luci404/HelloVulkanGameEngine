@@ -29,9 +29,10 @@ namespace HVGE
         void DrawFrame();
 
     private:
-        Window m_Window;
-        Device m_Device;
-        SwapChain m_SwapChain;
+        Window m_Window{ 1280, 720, "Hello Vulkan Game Engine" };
+        Device m_Device{ m_Window };
+        SwapChain m_SwapChain{ m_Device, m_Window.GetExtent()};
+
         std::unique_ptr<Pipeline> m_Pipeline;
         VkPipelineLayout m_PipelineLayout;
         std::vector<VkCommandBuffer> m_CommandBuffers;

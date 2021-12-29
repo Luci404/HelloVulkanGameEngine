@@ -19,9 +19,14 @@ namespace HVGE
         vkDestroyPipeline(m_Device.device(), m_GraphicsPipeline, nullptr);
     }
 
+    void Pipeline::Bind(VkCommandBuffer commandBuffer)
+    {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
+    }
+
     PipelineConfigInfo Pipeline::DefaultPipelineConfigInfo(uint32_t width, uint32_t height)
     {
-        PipelineConfigInfo configInfo;
+        PipelineConfigInfo configInfo{};
 
         configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -67,16 +72,6 @@ namespace HVGE
         configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
         configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
         configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
-
-        configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-        configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
-        configInfo.colorBlendInfo.attachmentCount = 1;
-        configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
-        configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
 
         configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
@@ -147,6 +142,17 @@ namespace HVGE
         viewportInfo.scissorCount = 1;
         viewportInfo.pScissors = &configInfo.scissor;
 
+        VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+        colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlendInfo.logicOpEnable = VK_FALSE;
+        colorBlendInfo.logicOp = VK_LOGIC_OP_COPY; 
+        colorBlendInfo.attachmentCount = 1;
+        colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
+        colorBlendInfo.blendConstants[0] = 0.0f; 
+        colorBlendInfo.blendConstants[1] = 0.0f;
+        colorBlendInfo.blendConstants[2] = 0.0f;
+        colorBlendInfo.blendConstants[3] = 0.0f;
+
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = 2;
@@ -156,7 +162,7 @@ namespace HVGE
         pipelineInfo.pViewportState = &viewportInfo;
         pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
         pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
-        pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
+        pipelineInfo.pColorBlendState = &colorBlendInfo;
         pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
         pipelineInfo.pDynamicState = nullptr;
 
@@ -167,9 +173,7 @@ namespace HVGE
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        auto res = vkCreateGraphicsPipelines(m_Device.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline);
-
-        assert(false);
+        assert(vkCreateGraphicsPipelines(m_Device.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) == VK_SUCCESS);
     }
 
     void Pipeline::CreateShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule)
