@@ -4,6 +4,7 @@
 #include "HVGE/Device.h"
 #include "HVGE/SwapChain.h"
 #include "HVGE/Pipeline.h"
+#include "HVGE/Model.h"
 
 #include <memory>
 #include <vector>
@@ -22,6 +23,8 @@ namespace HVGE
         void Run();
 
     private:
+        void LoadModels();
+        
         void CreatePipelineLayout();
         void CreatePipeline();
         void CreateCommandBuffers();
@@ -36,5 +39,6 @@ namespace HVGE
         std::unique_ptr<Pipeline> m_Pipeline;
         VkPipelineLayout m_PipelineLayout;
         std::vector<VkCommandBuffer> m_CommandBuffers;
+        std::unique_ptr<Model> m_Model;
     };
 }
