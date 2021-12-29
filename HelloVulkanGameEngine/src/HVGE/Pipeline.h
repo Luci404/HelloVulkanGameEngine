@@ -9,12 +9,17 @@ namespace HVGE
 {
     struct PipelineConfigInfo
     {
-        VkViewport viewport;
-        VkRect2D scissor;
+        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+        PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+
+        VkPipelineViewportStateCreateInfo viewportInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;
         VkPipelineMultisampleStateCreateInfo multisampleInfo;
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
+        VkPipelineColorBlendStateCreateInfo colorBlendInfo;
+        std::vector<VkDynamicState> dynamicStateEnables;
+        VkPipelineDynamicStateCreateInfo dynamicStateInfo;
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
         VkPipelineLayout pipelineLayout = nullptr;
         VkRenderPass renderPass = nullptr;
@@ -28,10 +33,10 @@ namespace HVGE
         ~Pipeline();
 
         Pipeline(const Pipeline&) = delete;
-        void operator=(const Pipeline&) = delete;
+        Pipeline& operator=(const Pipeline&) = delete;
 
         void Bind(VkCommandBuffer commandBuffer);
-        static PipelineConfigInfo DefaultPipelineConfigInfo(uint32_t width, uint32_t height);
+        static void DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
     private:
         std::vector<char> ReadFile(const std::string& filepath);

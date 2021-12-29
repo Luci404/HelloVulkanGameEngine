@@ -24,18 +24,18 @@ namespace HVGE
 
     private:
         void LoadModels();
-        
         void CreatePipelineLayout();
         void CreatePipeline();
+        void FreeCommandBuffers();
         void CreateCommandBuffers();
-
         void DrawFrame();
+        void RecreateSwapChain();
+        void RecordCommandBuffer(int imageIndex);
 
     private:
         Window m_Window{ 1280, 720, "Hello Vulkan Game Engine" };
         Device m_Device{ m_Window };
-        SwapChain m_SwapChain{ m_Device, m_Window.GetExtent()};
-
+        std::unique_ptr<SwapChain> m_SwapChain;
         std::unique_ptr<Pipeline> m_Pipeline;
         VkPipelineLayout m_PipelineLayout;
         std::vector<VkCommandBuffer> m_CommandBuffers;
