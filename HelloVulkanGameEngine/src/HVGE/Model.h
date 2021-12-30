@@ -23,7 +23,12 @@ namespace HVGE
 		};
 
 	public:
-		Model(Device& device, const std::vector<Vertex>& vertices);
+		struct Builder {
+			std::vector<Vertex> vertices{};
+			std::vector<uint32_t> indices{};
+		};
+
+		Model(Device& device, const Model::Builder& builder);
 		~Model();
 
 		Model(const Model&) = delete;
@@ -34,11 +39,17 @@ namespace HVGE
 
 	private:
 		void CreateVertexBuffers(const std::vector<Vertex>& vertices);
+		void CreateIndexBuffers(const std::vector<uint32_t>& indices);
 
 	private:
 		Device& m_Device;
 		VkBuffer m_VertexBuffer;
 		VkDeviceMemory m_VertexBufferMemory;
 		uint32_t m_VertexCount;
+
+		bool m_HasIndexBuffer = false;
+		VkBuffer m_IndexBuffer;
+		VkDeviceMemory m_IndexBufferMemory;
+		uint32_t m_IndexCount;
 	};
 }
