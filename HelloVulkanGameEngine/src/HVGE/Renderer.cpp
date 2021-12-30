@@ -39,7 +39,6 @@ namespace HVGE
         assert(vkBeginCommandBuffer(commandBuffer, &beginInfo) == VK_SUCCESS);
 
         return commandBuffer;
-
     }
 
     void Renderer::EndFrame()
@@ -59,6 +58,7 @@ namespace HVGE
         }
 
         m_IsFrameStarted = false;
+        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
     void Renderer::BeginSwapChainRenderPass(VkCommandBuffer commandBuffer)
@@ -110,7 +110,7 @@ namespace HVGE
 
     void Renderer::CreateCommandBuffers()
     {
-        m_CommandBuffers.resize(m_SwapChain->imageCount());
+        m_CommandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -138,12 +138,10 @@ namespace HVGE
         }
         else
         {
-            m_SwapChain = std::make_unique<SwapChain>(m_Device, extent, std::move(m_SwapChain));
-            if (m_SwapChain->imageCount() != m_CommandBuffers.size())
-            {
-                FreeCommandBuffers();
-                CreateCommandBuffers();
-            }
+            std::shared_ptr<SwapChain> oldSwapChain = std::move(m_SwapChain);
+            m_SwapChain = std::make_unique<SwapChain>(m_Device, extent, oldSwapChain);
+            
+            assert(oldSwapChain->CompareSwapFormats(*m_SwapChain.get())); // Swap chain image formats has changed!
         }
     }
 }

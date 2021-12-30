@@ -21,7 +21,8 @@ namespace HVGE
 
         VkRenderPass GetSwapChainRenderPass() const { return m_SwapChain->getRenderPass(); }
         bool IsFrameInProgress() const { return m_IsFrameStarted; }
-        VkCommandBuffer GetCurrentCommandBuffer() const { assert(m_IsFrameStarted); return m_CommandBuffers[m_CurrentImageIndex]; }
+        VkCommandBuffer GetCurrentCommandBuffer() const { assert(m_IsFrameStarted); return m_CommandBuffers[m_CurrentFrameIndex]; }
+        int GetFrameIndex() const { assert(m_IsFrameStarted); return m_CurrentFrameIndex; }
 
         VkCommandBuffer BeginFrame();
         void EndFrame();
@@ -40,6 +41,7 @@ namespace HVGE
         std::vector<VkCommandBuffer> m_CommandBuffers;
 
         uint32_t m_CurrentImageIndex;
+        int m_CurrentFrameIndex = 0;
         bool m_IsFrameStarted = false;
     };
 }

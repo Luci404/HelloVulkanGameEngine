@@ -24,17 +24,12 @@ namespace HVGE
 
     private:
         void LoadGameObjects();
-        void CreatePipelineLayout();
-        void CreatePipeline();
-        void RenderGameObjects(VkCommandBuffer m_CommandBuffer);
 
     private:
         Window m_Window{ 1280, 720, "Hello Vulkan Game Engine" };
         Device m_Device{ m_Window };
         Renderer m_Renderer {m_Window, m_Device };
-        
-        std::unique_ptr<Pipeline> m_Pipeline;
-        VkPipelineLayout m_PipelineLayout;
+
         std::vector<GameObject> m_GameObjects;
     };
 }
