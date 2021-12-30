@@ -10,68 +10,69 @@
 
 struct SimplePushConstantData
 {
-    glm::mat4 transform{1.0f};
-    alignas(16) glm::vec3 color{};
+	glm::mat4 transform{ 1.0f };
+	glm::mat4 normalMatrix{ 1.0f };
 };
 
 namespace HVGE
 {
-    SimpleRenderSystem::SimpleRenderSystem(Device& device, VkRenderPass renderPass)
-        : m_Device(device)
-    {
-        CreatePipelineLayout();
-        CreatePipeline(renderPass);
-    }
+	SimpleRenderSystem::SimpleRenderSystem(Device& device, VkRenderPass renderPass)
+		: m_Device(device)
+	{
+		CreatePipelineLayout();
+		CreatePipeline(renderPass);
+	}
 
-    SimpleRenderSystem::~SimpleRenderSystem()
-    {
-        vkDestroyPipelineLayout(m_Device.device(), m_PipelineLayout, nullptr);
-    }
+	SimpleRenderSystem::~SimpleRenderSystem()
+	{
+		vkDestroyPipelineLayout(m_Device.device(), m_PipelineLayout, nullptr);
+	}
 
-    void SimpleRenderSystem::CreatePipelineLayout()
-    {
-        VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
+	void SimpleRenderSystem::CreatePipelineLayout()
+	{
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
-        pipelineLayoutInfo.pushConstantRangeCount = 1;
-        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 0;
+		pipelineLayoutInfo.pSetLayouts = nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-        assert(vkCreatePipelineLayout(m_Device.device(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) == VK_SUCCESS);
-    }
+		assert(vkCreatePipelineLayout(m_Device.device(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) == VK_SUCCESS);
+	}
 
-    void SimpleRenderSystem::CreatePipeline(VkRenderPass renderPass)
-    {
-        assert(m_PipelineLayout != nullptr);
+	void SimpleRenderSystem::CreatePipeline(VkRenderPass renderPass)
+	{
+		assert(m_PipelineLayout != nullptr);
 
-        PipelineConfigInfo pipelineConfig{};
-        Pipeline::DefaultPipelineConfigInfo(pipelineConfig);
-        pipelineConfig.renderPass = renderPass;
-        pipelineConfig.pipelineLayout = m_PipelineLayout;
+		PipelineConfigInfo pipelineConfig{};
+		Pipeline::DefaultPipelineConfigInfo(pipelineConfig);
+		pipelineConfig.renderPass = renderPass;
+		pipelineConfig.pipelineLayout = m_PipelineLayout;
 
-        m_Pipeline = std::make_unique<Pipeline>(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.vert.spv", "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.frag.spv", pipelineConfig);
-    }
+		m_Pipeline = std::make_unique<Pipeline>(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.vert.spv", "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.frag.spv", pipelineConfig);
+	}
 
-    void SimpleRenderSystem::RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera)
-    {
-        m_Pipeline->Bind(commandBuffer);
+	void SimpleRenderSystem::RenderGameObjects(FrameInfo& frameInfo, std::vector<GameObject>& gameObjects)
+	{
+		m_Pipeline->Bind(frameInfo.commandBuffer);
 
-        auto projectionView = camera.GetProjection() * camera.GetView();
+		auto projectionView = frameInfo.camera.GetProjection() * frameInfo.camera.GetView();
 
-        for (auto &obj : gameObjects)
-        {
-            SimplePushConstantData push{};
-            push.color = obj.color;
-            push.transform = projectionView * obj.transform.mat4();
+		for (auto& obj : gameObjects)
+		{
+			SimplePushConstantData push{};
+			auto modelMatrix = obj.transform.mat4();
+			push.transform = projectionView * modelMatrix;
+			push.normalMatrix = obj.transform.normalMatrix();
 
-            vkCmdPushConstants(commandBuffer, m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-            obj.model->Bind(commandBuffer);
-            obj.model->Draw(commandBuffer);
-        }
-    }
+			vkCmdPushConstants(frameInfo.commandBuffer, m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+			obj.model->Bind(frameInfo.commandBuffer);
+			obj.model->Draw(frameInfo.commandBuffer);
+		}
+	}
 }

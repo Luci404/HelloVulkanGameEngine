@@ -7,6 +7,7 @@
 #include "HVGE/Pipeline.h"
 #include "HVGE/GameObject.h"
 #include "HVGE/Camera.h"
+#include "HVGE/FrameInfo.h"
 
 
 namespace HVGE
@@ -20,7 +21,7 @@ namespace HVGE
         SimpleRenderSystem(const SimpleRenderSystem &) = delete;
         SimpleRenderSystem operator=(const SimpleRenderSystem &) = delete;
 
-        void RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera);
+        void RenderGameObjects(FrameInfo &frameInfo, std::vector<GameObject>& gameObjects);
 
     private:
         void CreatePipelineLayout();

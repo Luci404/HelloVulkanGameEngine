@@ -20,3 +20,5 @@ include_directories("${CMAKE_SOURCE_DIR}/HelloVulkanGameEngine/vendor/glm")
 set(VULKAN_PATH "C:/VulkanSDK/1.2.170.0")                                             
 include_directories(AFTER "${VULKAN_PATH}/Include")
 target_link_libraries(HelloVulkanGameEngine "${VULKAN_PATH}/Lib/vulkan-1.lib")
+
+include_directories("${CMAKE_SOURCE_DIR}/HelloVulkanGameEngine/vendor/tinyobjloader")
