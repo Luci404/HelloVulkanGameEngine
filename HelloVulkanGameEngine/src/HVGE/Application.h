@@ -5,6 +5,7 @@
 #include "HVGE/Renderer.h"
 #include "HVGE/Pipeline.h"
 #include "HVGE/GameObject.h"
+#include "HVGE/Descriptors.h"
 
 #include <memory>
 #include <vector>
@@ -30,6 +31,7 @@ namespace HVGE
         Device m_Device{ m_Window };
         Renderer m_Renderer {m_Window, m_Device };
 
+        std::unique_ptr<DescriptorPool> globalPool{};
         std::vector<GameObject> m_GameObjects;
     };
 }
