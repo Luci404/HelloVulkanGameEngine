@@ -3,17 +3,29 @@
 #include <assert.h>
 #include <array>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
+
+struct SimplePushConstantData
+{
+    glm::mat2 transform{1.0f};
+    glm::vec2 offset;
+    alignas(16) glm::vec3 color;
+};
+
 namespace HVGE
-{    
+{
     Application::Application()
     {
-        LoadModels();
+        LoadGameObjects();
         CreatePipelineLayout();
         RecreateSwapChain();
         CreateCommandBuffers();
     }
 
-    Application::~Application() 
+    Application::~Application()
     {
         vkDestroyPipelineLayout(m_Device.device(), m_PipelineLayout, nullptr);
     }
@@ -29,27 +41,40 @@ namespace HVGE
         vkDeviceWaitIdle(m_Device.device());
     }
 
-    void Application::LoadModels()
+    void Application::LoadGameObjects()
     {
-        std::vector<Model::Vertex> vertices{
+        std::vector<Model::Vertex> triangleVertices{
             {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
             {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-        };
+            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-        m_Model = std::make_unique<Model>(m_Device, vertices);
+        auto triangleModel = std::make_shared<Model>(m_Device, triangleVertices);
+
+        auto triangleGameObject = GameObject::CreateGameObject();
+        triangleGameObject.model = triangleModel;
+        triangleGameObject.color = {.1f, .8f, .1f};
+        triangleGameObject.transform2d.translation.x = .2f;
+        triangleGameObject.transform2d.scale = {2.f, .5f};
+        triangleGameObject.transform2d.rotation = .25f * glm::two_pi<float>();
+
+        m_GameObjects.push_back(std::move(triangleGameObject));
     }
 
     void Application::CreatePipelineLayout()
     {
-        VkPipelineLayoutCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        createInfo.setLayoutCount = 0;
-        createInfo.pSetLayouts = nullptr;
-        createInfo.pushConstantRangeCount = 0;
-        createInfo.pPushConstantRanges = nullptr;
+        VkPushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(SimplePushConstantData);
 
-        assert(vkCreatePipelineLayout(m_Device.device(), &createInfo, nullptr, &m_PipelineLayout) == VK_SUCCESS);
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+        assert(vkCreatePipelineLayout(m_Device.device(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) == VK_SUCCESS);
     }
 
     void Application::CreatePipeline()
@@ -62,9 +87,9 @@ namespace HVGE
         m_Pipeline = std::make_unique<Pipeline>(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.vert.spv", "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.frag.spv", pipelineConfig);
     }
 
-
-    void Application::FreeCommandBuffers() {
-        vkFreeCommandBuffers(m_Device.device(), m_Device.getCommandPool(), static_cast<uint32_t>(m_CommandBuffers.size()),  m_CommandBuffers.data());
+    void Application::FreeCommandBuffers()
+    {
+        vkFreeCommandBuffers(m_Device.device(), m_Device.getCommandPool(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
         m_CommandBuffers.clear();
     }
 
@@ -117,20 +142,21 @@ namespace HVGE
 
         vkDeviceWaitIdle(m_Device.device());
 
-        if (m_SwapChain == nullptr) {
+        if (m_SwapChain == nullptr)
+        {
             m_SwapChain = std::make_unique<SwapChain>(m_Device, extent);
         }
-        else {
+        else
+        {
             m_SwapChain = std::make_unique<SwapChain>(m_Device, extent, std::move(m_SwapChain));
-            if (m_SwapChain->imageCount() != m_CommandBuffers.size()) {
+            if (m_SwapChain->imageCount() != m_CommandBuffers.size())
+            {
                 FreeCommandBuffers();
                 CreateCommandBuffers();
             }
         }
 
-
         CreatePipeline();
-
     }
 
     void Application::RecordCommandBuffer(int imageIndex)
@@ -145,12 +171,12 @@ namespace HVGE
         renderPassInfo.renderPass = m_SwapChain->getRenderPass();
         renderPassInfo.framebuffer = m_SwapChain->getFrameBuffer(imageIndex);
 
-        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = m_SwapChain->getSwapChainExtent();
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
-        clearValues[1].depthStencil = { 1.0f, 0 };
+        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+        clearValues[1].depthStencil = {1.0f, 0};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
@@ -163,15 +189,32 @@ namespace HVGE
         viewport.height = static_cast<float>(m_SwapChain->getSwapChainExtent().height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
-        VkRect2D scissor{ {0, 0}, m_SwapChain->getSwapChainExtent() };
+        VkRect2D scissor{{0, 0}, m_SwapChain->getSwapChainExtent()};
         vkCmdSetViewport(m_CommandBuffers[imageIndex], 0, 1, &viewport);
         vkCmdSetScissor(m_CommandBuffers[imageIndex], 0, 1, &scissor);
 
-        m_Pipeline->Bind(m_CommandBuffers[imageIndex]);
-        m_Model->Bind(m_CommandBuffers[imageIndex]);
-        m_Model->Draw(m_CommandBuffers[imageIndex]);
+        RenderGameObjects(m_CommandBuffers[imageIndex]);
 
         vkCmdEndRenderPass(m_CommandBuffers[imageIndex]);
         assert(vkEndCommandBuffer(m_CommandBuffers[imageIndex]) == VK_SUCCESS);
+    }
+
+    void Application::RenderGameObjects(VkCommandBuffer commandBuffer)
+    {
+        m_Pipeline->Bind(commandBuffer);
+
+        for (auto &obj : m_GameObjects)
+        {
+            obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
+            SimplePushConstantData push{};
+            push.offset = obj.transform2d.translation;
+            push.color = obj.color;
+            push.transform = obj.transform2d.mat2();
+
+            vkCmdPushConstants(commandBuffer, m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+            obj.model->Bind(commandBuffer);
+            obj.model->Draw(commandBuffer);
+        }
     }
 }

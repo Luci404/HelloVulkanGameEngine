@@ -4,7 +4,7 @@
 #include "HVGE/Device.h"
 #include "HVGE/SwapChain.h"
 #include "HVGE/Pipeline.h"
-#include "HVGE/Model.h"
+#include "HVGE/GameObject.h"
 
 #include <memory>
 #include <vector>
@@ -23,7 +23,7 @@ namespace HVGE
         void Run();
 
     private:
-        void LoadModels();
+        void LoadGameObjects();
         void CreatePipelineLayout();
         void CreatePipeline();
         void FreeCommandBuffers();
@@ -31,6 +31,7 @@ namespace HVGE
         void DrawFrame();
         void RecreateSwapChain();
         void RecordCommandBuffer(int imageIndex);
+        void RenderGameObjects(VkCommandBuffer m_CommandBuffer);
 
     private:
         Window m_Window{ 1280, 720, "Hello Vulkan Game Engine" };
@@ -39,6 +40,6 @@ namespace HVGE
         std::unique_ptr<Pipeline> m_Pipeline;
         VkPipelineLayout m_PipelineLayout;
         std::vector<VkCommandBuffer> m_CommandBuffers;
-        std::unique_ptr<Model> m_Model;
+        std::vector<GameObject> m_GameObjects;
     };
 }
