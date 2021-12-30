@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HVGE/Camera.h"
+#include "HVGE/GameObject.h"
 
 #include <vulkan/vulkan.h>
 
@@ -10,6 +11,7 @@ namespace HVGE {
 		float frameTime;
 		VkCommandBuffer commandBuffer;
 		Camera& camera;
-    VkDescriptorSet globalDescriptorSet;
-  };
+		VkDescriptorSet globalDescriptorSet;
+		GameObject::Map& gameObjects;
+	};
 }

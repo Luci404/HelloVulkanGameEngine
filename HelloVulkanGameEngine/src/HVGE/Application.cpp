@@ -47,7 +47,7 @@ namespace HVGE
         }
 
         auto globalSetLayout = DescriptorSetLayout::Builder(m_Device)
-                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                                    .build();
 
         std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -84,7 +84,7 @@ namespace HVGE
             auto commandBuffer = m_Renderer.BeginFrame();
 
             int frameIndex = m_Renderer.GetFrameIndex();
-            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
+            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex], m_GameObjects };
 
             // Update
             GlobalUbo ubo{};
@@ -94,7 +94,7 @@ namespace HVGE
 
             // Render
             m_Renderer.BeginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.RenderGameObjects(frameInfo, m_GameObjects);
+            simpleRenderSystem.RenderGameObjects(frameInfo);
             m_Renderer.EndSwapChainRenderPass(commandBuffer);
             m_Renderer.EndFrame();
         }
@@ -109,20 +109,20 @@ namespace HVGE
         flatVaseGameObject.model = flatVaseModel;
         flatVaseGameObject.transform.translation = {-.5f, .5f, 0.0f};
         flatVaseGameObject.transform.scale = {3.f, 1.5f, 3.f};
-        m_GameObjects.push_back(std::move(flatVaseGameObject));
+        m_GameObjects.emplace(flatVaseGameObject.getId(), std::move(flatVaseGameObject));
 
         std::shared_ptr<Model> smoothVaseModel = Model::CreateModelFromFile(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/models/smooth_vase.obj");
         auto smoothVaseGameObject = GameObject::CreateGameObject();
         smoothVaseGameObject.model = smoothVaseModel;
         smoothVaseGameObject.transform.translation = {.5f, .5f, 0.0f};
         smoothVaseGameObject.transform.scale = {3.f, 1.5f, 3.f};
-        m_GameObjects.push_back(std::move(smoothVaseGameObject));
+        m_GameObjects.emplace(smoothVaseGameObject.getId(), std::move(smoothVaseGameObject));
 
         std::shared_ptr<Model> cubeModel = Model::CreateModelFromFile(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/models/quad.obj");
         auto cubeGameObject = GameObject::CreateGameObject();
         cubeGameObject.model = cubeModel;
         cubeGameObject.transform.translation = { 0.0f, .5f, 0.0f };
         cubeGameObject.transform.scale = { 3.f, 1.0f, 3.f };
-        m_GameObjects.push_back(std::move(cubeGameObject));
+        m_GameObjects.emplace(cubeGameObject.getId(), std::move(cubeGameObject));
     }
 }

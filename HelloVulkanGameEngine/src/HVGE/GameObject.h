@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <memory>
+#include <unordered_map>
 
 namespace HVGE {
 
@@ -24,6 +25,7 @@ namespace HVGE {
 	class GameObject {
 	public:
 		using id_t = unsigned int;
+		using Map = std::unordered_map<id_t, GameObject>;
 
 		static GameObject CreateGameObject() {
 			static id_t currentId = 0;
