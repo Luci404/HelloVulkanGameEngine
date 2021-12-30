@@ -20,6 +20,7 @@ namespace HVGE
         Renderer operator=(const Renderer&) = delete;
 
         VkRenderPass GetSwapChainRenderPass() const { return m_SwapChain->getRenderPass(); }
+        float GetAspectRatio() const { return m_SwapChain->extentAspectRatio(); }
         bool IsFrameInProgress() const { return m_IsFrameStarted; }
         VkCommandBuffer GetCurrentCommandBuffer() const { assert(m_IsFrameStarted); return m_CommandBuffers[m_CurrentFrameIndex]; }
         int GetFrameIndex() const { assert(m_IsFrameStarted); return m_CurrentFrameIndex; }

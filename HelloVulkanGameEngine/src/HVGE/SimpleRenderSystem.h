@@ -1,11 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "HVGE/Device.h"
 #include "HVGE/Pipeline.h"
 #include "HVGE/GameObject.h"
+#include "HVGE/Camera.h"
 
-#include <memory>
-#include <vector>
 
 namespace HVGE
 {
@@ -18,7 +20,7 @@ namespace HVGE
         SimpleRenderSystem(const SimpleRenderSystem &) = delete;
         SimpleRenderSystem operator=(const SimpleRenderSystem &) = delete;
 
-        void RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects);
+        void RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera);
 
     private:
         void CreatePipelineLayout();

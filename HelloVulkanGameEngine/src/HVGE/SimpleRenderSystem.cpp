@@ -10,9 +10,8 @@
 
 struct SimplePushConstantData
 {
-    glm::mat2 transform{1.0f};
-    glm::vec2 offset;
-    alignas(16) glm::vec3 color;
+    glm::mat4 transform{1.0f};
+    alignas(16) glm::vec3 color{};
 };
 
 namespace HVGE
@@ -58,18 +57,18 @@ namespace HVGE
         m_Pipeline = std::make_unique<Pipeline>(m_Device, "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.vert.spv", "C:/Dev/HelloVulkanGameEngine/HelloVulkanGameEngine/assets/shaders/shader.frag.spv", pipelineConfig);
     }
 
-    void SimpleRenderSystem::RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects)
+    void SimpleRenderSystem::RenderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera)
     {
         m_Pipeline->Bind(commandBuffer);
 
         for (auto &obj : gameObjects)
         {
-            obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+            obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.01f, glm::two_pi<float>());
+            obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.005f, glm::two_pi<float>());
 
             SimplePushConstantData push{};
-            push.offset = obj.transform2d.translation;
             push.color = obj.color;
-            push.transform = obj.transform2d.mat2();
+            push.transform = camera.GetProjection() * obj.transform.mat4();
 
             vkCmdPushConstants(commandBuffer, m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
             obj.model->Bind(commandBuffer);

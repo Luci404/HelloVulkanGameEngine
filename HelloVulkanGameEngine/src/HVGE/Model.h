@@ -15,8 +15,8 @@ namespace HVGE
 	public:
 		struct Vertex
 		{
-			glm::vec2 Position;
-			glm::vec3 Color;
+			glm::vec3 Position{};
+			glm::vec3 Color{};
 
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
