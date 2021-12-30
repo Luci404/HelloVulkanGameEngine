@@ -2,12 +2,14 @@
 
 #include <assert.h>
 #include <array>
+#include <chrono>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include "HVGE/KeyboardMovementController.h"
 #include "HVGE/SimpleRenderSystem.h"
 #include "HVGE/Camera.h"
 
@@ -26,14 +28,24 @@ namespace HVGE
 	{
 		SimpleRenderSystem simpleRenderSystem{ m_Device, m_Renderer.GetSwapChainRenderPass() };
         Camera camera{};
-		camera.SetViewTarget(glm::vec3(-1.f, -2.f, -2.f), glm::vec3(0.f, 0.f, 2.5f));
 
+		auto viewerObject = GameObject::CreateGameObject();
+		KeyboardMovementController cameraController{};
+
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
 		while (!m_Window.ShouldClose())
 		{
 			glfwPollEvents();
 
+			auto newTime = std::chrono::high_resolution_clock::now();
+			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+			currentTime = newTime;
+
+			cameraController.MoveInPlaneXZ(m_Window.GetGLFWwindow(), frameTime, viewerObject);
+			camera.SetViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
             float aspect = m_Renderer.GetAspectRatio();
-            // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
             camera.SetPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 
 			auto commandBuffer = m_Renderer.BeginFrame();
